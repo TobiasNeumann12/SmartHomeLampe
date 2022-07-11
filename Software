@@ -1,1 +1,213 @@
 
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <ArduinoOTA.h>
+#include <ESP8266HTTPClient.h>
+
+//WiFi details
+//folgende vier Parameter anpassen.
+//--------------------------------
+const char* mqtt_topic_publish = "bewegungssensor";
+const char* mqtt_topic_subscribe = "bewegungErkannt";
+const char* ssid = "WLAN-941531";
+const char* password = "57446198320518822816";
+//--------------------------------
+
+//Bewegungssensor Hostname und clientID
+#define ESPHostname "HC-SR501_Sensor"
+String clientId = "HC-SR501_Sensor-"; 
+
+//ueber den endpoint steuern wir die Lampe an http://<IP>/api/<auth. User>/lights/1/state
+const char* endpoint = "http://192.168.0.3/api/NVXiVbQfRTTM9cwOlD6N54wXyExXixSIJzIL40RJ/lights/1/state";
+
+//folgende vier Parameter nicht ändern
+//--------------------------------
+const char* mqtt_server = "mqtt.iot.informatik.uni-oldenburg.de";
+const int mqtt_port = 2883;
+const char* mqtt_user = "sutk";
+const char* mqtt_pw = "SoftSkills";
+//--------------------------------
+
+
+#define outTopic "PIR_Sensor" 
+#define inTopic "PIR_Sensor/intopic" 
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+long lastMsg = 0;
+int val = 0;
+
+const int motionPin = 5;
+int pirState = LOW;
+
+void setup_wifi() {
+
+  delay(10);
+  // We start by connecting to a WiFi network
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  randomSeed(micros());
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+  void callback(char* topic, byte* message, unsigned int length) {
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  String messageTemp;
+  
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+
+  if (String(topic) == inTopic) {
+    //Auswertung wenn Daten in den ESP kommen
+  }
+}
+
+      
+ void reconnect() {
+  // Loop until we're reconnected Client ID MUSS inviduell sein, da der MQTT Broker nicht mehrere Clients mit derselben ID bedienen kann
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (client.connect(clientId.c_str(), mqtt_user, mqtt_pw)) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      client.publish(outTopic, ESPHostname);
+      // ... and resubscribe
+      client.subscribe(inTopic);
+    } else {
+        Serial.print("failed, rc=");
+        Serial.print(client.state());
+        Serial.println(" try again in 5 seconds");
+        // Wait 5 seconds before retrying
+        delay(5000);
+      }
+   }
+}
+ 
+void setup() {
+  Serial.begin(115200);
+  setup_wifi();
+  ArduinoOTA.setHostname(ESPHostname);
+  // ArduinoOTA.setPassword("admin");
+  ArduinoOTA.begin();
+   
+  client.setServer(mqtt_server, 1883); 
+  client.setCallback(callback); 
+  pinMode(motionPin, INPUT);     
+}
+
+    void loop(){
+  if (!client.connected()) {  
+    reconnect();  
+  }
+  client.loop();
+  ArduinoOTA.handle();
+  
+  if (digitalRead(motionPin) == HIGH) {
+    if (pirState == LOW) {
+      Serial.println("Bewegung erkannt");
+      TurnOnLight();
+      client.publish(outTopic, "ON");
+      pirState = HIGH;
+    }
+  } else {
+    if (pirState == HIGH){
+      Serial.println("Keine Bewegung");
+      TurnOffLight();
+      client.publish(outTopic, "OFF");
+      pirState = LOW;
+    }
+  }
+}
+
+void TurnOnLight(){
+  sendHTTPMessage("{\"on\":true}");                 // HTTP message to turn the light on
+}
+void TurnOffLight(){ 
+  sendHTTPMessage("{\"on\":false}");               // HTTP message to turn the light off
+}
+void ChangeColor (unsigned int colorCode){
+  String message = "{\"on\":true, \"sat\":254, \"bri\":150,\"hue\":";
+  message = message + String(colorCode) + "}";
+  sendHTTPMessage(message);
+}
+
+void sendHTTPMessage(String message)  // Function to do HTTP PUT request
+{
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    HTTPClient http;
+    http.begin(endpoint);
+    {http.addHeader("Content-Type", "text/plain;charset=UTF-8");
+    http.PUT(message);
+    http.end();
+    }
+  } 
+  else
+    {
+    Serial.println("Request not sent: Not connected");
+    }
+}
+
+
+
+
+
+    // Publish Char Array (einfachste Methode)
+    //client.publish(mqtt_topic_publish, "Hallo Welt");
+
+    //Im folgenden sind Codebeispiele für verschiedene Datentypen, die versendet werden sollen.
+
+    /*
+      // Publish String (String muss in ein Char-Array umgewandelt werden)
+      String payload = "Hallo Welt";
+      //Erzeuge Char Array der Länge der Strings + 1 für den Nullterminator am Ende
+      char payload_buff[payload.length() + 1];
+      // Wandelt String mit dem Befehl toCharArray(buf, len) in Array um
+      payload.toCharArray(payload_buff, payload.length() + 1);
+      //uund abschicken
+      client.publish(mqtt_topic_publish, payload_buff);
+
+      // Publish JSON (JSON String muss ebenfalls in Char Array umgewandelt werden. Verfahren ist vollkommen analog zu oben)
+      ++val;
+      String json_payload = "{\"message\":\"Hallo Welt\",\"number\":" + String(val) + "}";
+      char json_payload_buff[json_payload.length() + 1];
+      json_payload.toCharArray(json_payload_buff, json_payload.length() + 1);
+      client.publish(mqtt_topic_publish, json_payload_buff);
+
+
+      Publish int (auch hier muss die Zahl erst in einen String umgewandelt werden, damit wir daraus ein Array machen können)
+      String val_str = String(val);
+      char val_buff[val_str.length() + 1];
+      val_str.toCharArray(val_buff, val_str.length() + 1);
+      client.publish(mqtt_topic_publish, val_buff);
+
+      // Publish float (auch hier wieder char array)
+      float pi = 3.14;
+      String pi_str = String(pi);
+      char pi_buff[pi_str.length() + 1];
+      pi_str.toCharArray(pi_buff, pi_str.length() + 1);
+      client.publish(mqtt_topic_publish, pi_buff);
+
+    */
