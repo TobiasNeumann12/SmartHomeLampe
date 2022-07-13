@@ -158,7 +158,7 @@ void sendHTTPMessage(String message)  // Function to do HTTP PUT request
   if (WiFi.status() == WL_CONNECTED)
   {
     HTTPClient http;
-    http.begin(endpoint);
+    http.begin(espClient, endpoint);
     {http.addHeader("Content-Type", "text/plain;charset=UTF-8");
     http.PUT(message);
     http.end();
