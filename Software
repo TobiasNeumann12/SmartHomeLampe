@@ -112,7 +112,7 @@ void setup() {
   // ArduinoOTA.setPassword("admin");
   ArduinoOTA.begin();
    
-  client.setServer(mqtt_server, 1883); 
+  client.setServer(mqtt_server, 2883); 
   client.setCallback(callback); 
   pinMode(motionPin, INPUT);     
 }
