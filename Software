@@ -8,8 +8,8 @@
 //--------------------------------
 const char* mqtt_topic_publish = "bewegungssensor";
 const char* mqtt_topic_subscribe = "bewegungErkannt";
-const char* ssid = "GUESTS - Anja & Olaf";
-const char* password = "MTorres2021";
+const char* ssid = "*****";
+const char* password = "*****";
 //--------------------------------
 
 //Bewegungssensor Hostname und clientID
