@@ -16,8 +16,8 @@ const char* password = "*****";
 #define ESPHostname "HC-SR501_Sensor"
 String clientId = "HC-SR501_Sensor-"; 
 
-//ueber den endpoint steuern wir die Lampe an http://<IP>/api/<auth. User>/lights/1/state
-const char* endpoint = "http://192.168.0.3/api/NVXiVbQfRTTM9cwOlD6N54wXyExXixSIJzIL40RJ/lights/1/state";
+
+
 
 //folgende vier Parameter nicht ändern
 //--------------------------------
