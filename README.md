@@ -27,3 +27,10 @@ Die Verbindung zu dem MQTT-Broker wird in der methode reconnect() hergestellt;
 Eine erfolgreiche Verbindung wird durch die Ausgabe von "connected" angezeigt
 Bei Verbindungsabbruch wird automatisch eine erneute Verbindung versucht, bis die Verbindung wieder steht
 Nach erfolgreichem Wiederverbinden wird dies als Nachricht published und neu subscribed
+
+
+
+Zeile 108 markiert den Beginn der Funktionalitaet des Controllers
+
+setup() stellt die WLAN-Verbindung her und nutzt die oben definierten Parameter, um den korrekten Server anzusteuern
+loop() ist fuer das Aufrechterhalten der MQTT-Verbindung zustaendig und verarbeitet die Daten des Bewegungssensors
