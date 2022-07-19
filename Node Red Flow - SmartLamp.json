@@ -1,0 +1,222 @@
+[
+    {
+        "id": "8a6e646b5d6fd01b",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "98ba8b42ec196ed8",
+        "type": "mqtt in",
+        "z": "8a6e646b5d6fd01b",
+        "name": "subscribeBewegungssensor",
+        "topic": "bewegungErkannt",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "36051a1ae716289e",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 280,
+        "y": 480,
+        "wires": [
+            [
+                "663fa8eafb0d9993"
+            ]
+        ]
+    },
+    {
+        "id": "6f30aebb4d9f3834",
+        "type": "hue-light",
+        "z": "8a6e646b5d6fd01b",
+        "name": "Hue color lamp 1",
+        "bridge": "7bf4e968da8960e6",
+        "lightid": "138af854-c600-4c3d-9a96-734a78d5fa07",
+        "colornamer": true,
+        "skipevents": false,
+        "initevents": false,
+        "x": 810,
+        "y": 480,
+        "wires": [
+            [
+                "f9d6a77a7d843f21"
+            ]
+        ]
+    },
+    {
+        "id": "62a87d14a869853a",
+        "type": "mqtt out",
+        "z": "8a6e646b5d6fd01b",
+        "name": "publishStatusLampe",
+        "topic": "lampeStatus",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "3023f2e36899d48b",
+        "x": 1420,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "f9d6a77a7d843f21",
+        "type": "function",
+        "z": "8a6e646b5d6fd01b",
+        "name": "Status Filter",
+        "func": "\nreturn {payload: msg.payload.on};",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1030,
+        "y": 480,
+        "wires": [
+            [
+                "270fcfb1afaa26ea",
+                "62a87d14a869853a"
+            ]
+        ]
+    },
+    {
+        "id": "5d764bd9647f937b",
+        "type": "debug",
+        "z": "8a6e646b5d6fd01b",
+        "name": "ON/OFF",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "663fa8eafb0d9993",
+        "type": "change",
+        "z": "8a6e646b5d6fd01b",
+        "name": "ON or OFF -> Boolean",
+        "rules": [
+            {
+                "t": "change",
+                "p": "payload",
+                "pt": "msg",
+                "from": "ON",
+                "fromt": "str",
+                "to": "true",
+                "tot": "bool"
+            },
+            {
+                "t": "change",
+                "p": "payload",
+                "pt": "msg",
+                "from": "OFF",
+                "fromt": "str",
+                "to": "false",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 560,
+        "y": 480,
+        "wires": [
+            [
+                "6f30aebb4d9f3834",
+                "5d764bd9647f937b"
+            ]
+        ]
+    },
+    {
+        "id": "270fcfb1afaa26ea",
+        "type": "debug",
+        "z": "8a6e646b5d6fd01b",
+        "name": "Nach dem Filter",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1260,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "36051a1ae716289e",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "mqtt.iot.informatik.uni-oldenburg.de",
+        "port": "2883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "7bf4e968da8960e6",
+        "type": "hue-bridge",
+        "name": "Philips hue",
+        "bridge": "192.168.178.69",
+        "key": "6xglK3Ky3oOHyrbF8AC3CqRW-pTtmjLeUChsEf4O",
+        "worker": "10",
+        "autoupdates": true,
+        "disableupdates": false
+    },
+    {
+        "id": "3023f2e36899d48b",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "mqtt.iot.informatik.uni-oldenburg.de",
+        "port": "2883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    }
+]
