@@ -1,4 +1,3 @@
-
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoOTA.h>
@@ -9,8 +8,8 @@
 //--------------------------------
 const char* mqtt_topic_publish = "bewegungssensor";
 const char* mqtt_topic_subscribe = "bewegungErkannt";
-const char* ssid = "WLAN-941531";
-const char* password = "57446198320518822816";
+const char* ssid = "GUESTS - Anja & Olaf";
+const char* password = "MTorres2021";
 //--------------------------------
 
 //Bewegungssensor Hostname und clientID
@@ -28,9 +27,11 @@ const char* mqtt_user = "sutk";
 const char* mqtt_pw = "SoftSkills";
 //--------------------------------
 
+//
+String lampeStatus = "";
 
-#define outTopic "PIR_Sensor" 
-#define inTopic "PIR_Sensor/intopic" 
+#define outTopic "bewegungErkannt" 
+#define inTopic "lampeStatus" 
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -74,6 +75,7 @@ void setup_wifi() {
     Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
+  lampeStatus = messageTemp;
   Serial.println();
 
   if (String(topic) == inTopic) {
@@ -112,7 +114,7 @@ void setup() {
   // ArduinoOTA.setPassword("admin");
   ArduinoOTA.begin();
    
-  client.setServer(mqtt_server, 2883); 
+  client.setServer(mqtt_server, mqtt_port); 
   client.setCallback(callback); 
   pinMode(motionPin, INPUT);     
 }
@@ -123,52 +125,27 @@ void setup() {
   }
   client.loop();
   ArduinoOTA.handle();
+
   
-  if (digitalRead(motionPin) == HIGH) {
-    if (pirState == LOW) {
+  
+ if (digitalRead(motionPin) == HIGH) {
+     if (pirState == LOW) {
       Serial.println("Bewegung erkannt");
-      TurnOnLight();
-      client.publish(outTopic, "ON");
-      pirState = HIGH;
-    }
-  } else {
-    if (pirState == HIGH){
-      Serial.println("Keine Bewegung");
-      TurnOffLight();
-      client.publish(outTopic, "OFF");
-      pirState = LOW;
-    }
-  }
-}
+      client.setCallback(callback);
+      if(lampeStatus == "false"){
+        client.publish(outTopic, "ON");
+        Serial.println("ON gepublished");
+        pirState = LOW;
+     } else{
+        client.publish(outTopic, "OFF");
+        Serial.println("OFF gepublished");
+        pirState = LOW;
+      }
+     }
+      delay(2000);
+      }
+   }
 
-void TurnOnLight(){
-  sendHTTPMessage("{\"on\":true}");                 // HTTP message to turn the light on
-}
-void TurnOffLight(){ 
-  sendHTTPMessage("{\"on\":false}");               // HTTP message to turn the light off
-}
-void ChangeColor (unsigned int colorCode){
-  String message = "{\"on\":true, \"sat\":254, \"bri\":150,\"hue\":";
-  message = message + String(colorCode) + "}";
-  sendHTTPMessage(message);
-}
-
-void sendHTTPMessage(String message)  // Function to do HTTP PUT request
-{
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    HTTPClient http;
-    http.begin(espClient, endpoint);
-    {http.addHeader("Content-Type", "text/plain;charset=UTF-8");
-    http.PUT(message);
-    http.end();
-    }
-  } 
-  else
-    {
-    Serial.println("Request not sent: Not connected");
-    }
-}
 
 
 
